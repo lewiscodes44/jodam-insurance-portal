@@ -1,116 +1,15 @@
 package ke.co.jodam.insurance.dto.policy;
-
 import ke.co.jodam.insurance.entity.PolicyStatus;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
 public class PolicyResponse {
-
-    private Long id;
-    private String policyNumber;
-    private Long inquiryId;
-    private Long quotationId;
-    private String customerUsername;
-    private String agentUsername;
-    private String insuranceType;
-    private BigDecimal premiumAmount;
-    private String coverageDetails;
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private PolicyStatus status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-    public PolicyResponse() {
-    }
-
-    public PolicyResponse(
-            Long id,
-            String policyNumber,
-            Long inquiryId,
-            Long quotationId,
-            String customerUsername,
-            String agentUsername,
-            String insuranceType,
-            BigDecimal premiumAmount,
-            String coverageDetails,
-            LocalDate startDate,
-            LocalDate endDate,
-            PolicyStatus status,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt
-    ) {
-        this.id = id;
-        this.policyNumber = policyNumber;
-        this.inquiryId = inquiryId;
-        this.quotationId = quotationId;
-        this.customerUsername = customerUsername;
-        this.agentUsername = agentUsername;
-        this.insuranceType = insuranceType;
-        this.premiumAmount = premiumAmount;
-        this.coverageDetails = coverageDetails;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.status = status;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getPolicyNumber() {
-        return policyNumber;
-    }
-
-    public Long getInquiryId() {
-        return inquiryId;
-    }
-
-    public Long getQuotationId() {
-        return quotationId;
-    }
-
-    public String getCustomerUsername() {
-        return customerUsername;
-    }
-
-    public String getAgentUsername() {
-        return agentUsername;
-    }
-
-    public String getInsuranceType() {
-        return insuranceType;
-    }
-
-    public BigDecimal getPremiumAmount() {
-        return premiumAmount;
-    }
-
-    public String getCoverageDetails() {
-        return coverageDetails;
-    }
-
-    public LocalDate getStartDate() {
-        return startDate;
-    }
-
-    public LocalDate getEndDate() {
-        return endDate;
-    }
-
-    public PolicyStatus getStatus() {
-        return status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
+    private final Long id; private final String policyNumber; private final Long inquiryId; private final Long quotationId;
+    private final String customerUsername; private final String agentUsername; private final String insuranceType; private final BigDecimal premiumAmount;
+    private final String coverageDetails; private final LocalDate startDate; private final LocalDate endDate; private final PolicyStatus status;
+    private final String insurer; private final String product; private final String certificateNumber; private final String certificateClass;
+    private final String valuationReference; private final LocalDate valuationDate; private final Boolean documentsVerified; private final String policyTerms;
+    private final LocalDateTime createdAt; private final LocalDateTime updatedAt;
+    public PolicyResponse(Long id,String policyNumber,Long inquiryId,Long quotationId,String customerUsername,String agentUsername,String insuranceType,BigDecimal premiumAmount,String coverageDetails,LocalDate startDate,LocalDate endDate,PolicyStatus status,String insurer,String product,String certificateNumber,String certificateClass,String valuationReference,LocalDate valuationDate,Boolean documentsVerified,String policyTerms,LocalDateTime createdAt,LocalDateTime updatedAt){this.id=id;this.policyNumber=policyNumber;this.inquiryId=inquiryId;this.quotationId=quotationId;this.customerUsername=customerUsername;this.agentUsername=agentUsername;this.insuranceType=insuranceType;this.premiumAmount=premiumAmount;this.coverageDetails=coverageDetails;this.startDate=startDate;this.endDate=endDate;this.status=status;this.insurer=insurer;this.product=product;this.certificateNumber=certificateNumber;this.certificateClass=certificateClass;this.valuationReference=valuationReference;this.valuationDate=valuationDate;this.documentsVerified=documentsVerified;this.policyTerms=policyTerms;this.createdAt=createdAt;this.updatedAt=updatedAt;}
+    public Long getId(){return id;} public String getPolicyNumber(){return policyNumber;} public Long getInquiryId(){return inquiryId;} public Long getQuotationId(){return quotationId;} public String getCustomerUsername(){return customerUsername;} public String getAgentUsername(){return agentUsername;} public String getInsuranceType(){return insuranceType;} public BigDecimal getPremiumAmount(){return premiumAmount;} public String getCoverageDetails(){return coverageDetails;} public LocalDate getStartDate(){return startDate;} public LocalDate getEndDate(){return endDate;} public PolicyStatus getStatus(){return status;} public String getInsurer(){return insurer;} public String getProduct(){return product;} public String getCertificateNumber(){return certificateNumber;} public String getCertificateClass(){return certificateClass;} public String getValuationReference(){return valuationReference;} public LocalDate getValuationDate(){return valuationDate;} public Boolean getDocumentsVerified(){return documentsVerified;} public String getPolicyTerms(){return policyTerms;} public LocalDateTime getCreatedAt(){return createdAt;} public LocalDateTime getUpdatedAt(){return updatedAt;}
 }

@@ -20,8 +20,8 @@ export type AuthResponse = { message: string; username: string; token: string; r
 export function login(username: string, password: string) { return apiRequest<AuthResponse>('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }) }
 export function register(payload: { username: string; email: string; password: string; firstName: string; lastName: string; phoneNumber: string }) { return apiRequest<AuthResponse>('/api/auth/register', { method: 'POST', body: JSON.stringify(payload) }) }
 
-export type Policy = { id:number; policyNumber:string; inquiryId:number; quotationId:number; customerUsername:string; agentUsername:string; insuranceType:string; premiumAmount:number; coverageDetails:string; startDate:string; endDate:string; status:string; createdAt?:string; updatedAt?:string }
-export type Quotation = { id:number; inquiryId:number; customerUsername:string; agentUsername:string; insurer:string; product:string; basicPremium:number; totalPayable:number; premiumAmount:number; coverageDetails:string; specialTerms?:string; validUntil:string; status:string; quoteReference:string; createdAt:string }
+export type Policy = { id:number; policyNumber:string; inquiryId:number; quotationId:number; customerUsername:string; agentUsername:string; insuranceType:string; premiumAmount:number; coverageDetails:string; startDate:string; endDate:string; status:string; insurer?:string; product?:string; certificateNumber?:string; certificateClass?:string; valuationReference?:string; valuationDate?:string; documentsVerified?:boolean; policyTerms?:string; createdAt?:string; updatedAt?:string }
+export type Quotation = { id:number; inquiryId:number; customerUsername:string; agentUsername:string; insurer:string; product:string; basicPremium:number; trainingLevy?:number; phcfLevy?:number; stampDuty?:number; otherCharges?:number; totalPayable:number; premiumAmount:number; coverageDetails:string; specialTerms?:string; excess?:string; agentNotes?:string; validUntil:string; proposedStartDate?:string; proposedEndDate?:string; status:string; quoteReference:string; createdAt:string }
 export type InquiryApplication = {
   pin?: string; profession?: string; insuranceStartDate?: string; vehicleType?: string; registrationNumber?: string; make?: string; model?: string;
   bodyType?: string; yearOfManufacture?: string; chassisNumber?: string; engineNumber?: string; engineCapacity?: string; seatingCapacity?: string;
@@ -50,12 +50,14 @@ export const getAssignedInquiries = () => apiRequest<Inquiry[]>('/api/inquiries/
 export const getMyInquiry = (id:number) => apiRequest<Inquiry>(`/api/inquiries/${id}`)
 export const createInquiry = (payload:{insuranceType:string; description:string; applicationData?:InquiryApplication}) => apiRequest<Inquiry>('/api/inquiries', { method:'POST', body:JSON.stringify(payload) })
 export const assignInquiry = (id:number, agentUsername:string) => apiRequest<Inquiry>(`/api/inquiries/${id}/assign`, { method:'POST', body:JSON.stringify({ agentUsername }) })
-export const createQuotation = (inquiryId:number, payload:{insurer:string; product:string; basicPremium:number; validUntil:string; coverageDetails?:string; specialTerms?:string}) => apiRequest<Quotation>(`/api/quotations/inquiry/${inquiryId}`, { method:'POST', body:JSON.stringify(payload) })
+export type CreateQuotationPayload = { insurer:string; product:string; basicPremium:number; validUntil:string; trainingLevy?:number; phcfLevy?:number; stampDuty?:number; otherCharges?:number; proposedStartDate?:string; proposedEndDate?:string; excess?:string; coverageDetails?:string; specialTerms?:string; agentNotes?:string }
+export const createQuotation = (inquiryId:number, payload:CreateQuotationPayload) => apiRequest<Quotation>(`/api/quotations/inquiry/${inquiryId}`, { method:'POST', body:JSON.stringify(payload) })
 export const sendQuotation = (id:number) => apiRequest<Quotation>(`/api/quotations/${id}/send`, { method:'POST' })
 export const getQuotationForInquiry = (inquiryId:number) => apiRequest<Quotation>(`/api/quotations/inquiry/${inquiryId}`)
 export const acceptQuotation = (id:number) => apiRequest<Quotation>(`/api/quotations/${id}/accept`, { method:'POST' })
 export const rejectQuotation = (id:number) => apiRequest<Quotation>(`/api/quotations/${id}/reject`, { method:'POST' })
-export const issuePolicy = (quotationId:number, payload:{startDate:string; durationMonths:number}) => apiRequest<Policy>(`/api/policies/quotation/${quotationId}`, { method:'POST', body:JSON.stringify(payload) })
+export type IssuePolicyPayload = { startDate:string; durationMonths:number; certificateNumber:string; certificateClass:string; valuationReference?:string; valuationDate?:string; documentsVerified:boolean; policyTerms?:string }
+export const issuePolicy = (quotationId:number, payload:IssuePolicyPayload) => apiRequest<Policy>(`/api/policies/quotation/${quotationId}`, { method:'POST', body:JSON.stringify(payload) })
 export const renewPolicy = (policyId:number, newEndDate:string) => apiRequest<Policy>(`/api/policies/${policyId}/renew`, { method:'POST', body:JSON.stringify({newEndDate}) })
 export const cancelPolicy = (policyId:number, reason:string) => apiRequest<Policy>(`/api/policies/${policyId}/cancel`, { method:'POST', body:JSON.stringify({reason}) })
 export const initiatePayment = (policyId:number, phoneNumber:string) => apiRequest<Payment>(`/api/payments/policy/${policyId}`, { method:'POST', body:JSON.stringify({phoneNumber}) })

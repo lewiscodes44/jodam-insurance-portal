@@ -119,6 +119,14 @@ public class PolicyService {
         policy.setCustomer(inquiry.getCustomer());
         policy.setAgent(agent);
         policy.setInsuranceType(inquiry.getInsuranceType());
+        policy.setInsurer(quotation.getInsurer());
+        policy.setProduct(quotation.getProduct());
+        policy.setCertificateNumber(request.getCertificateNumber().trim());
+        policy.setCertificateClass(request.getCertificateClass().trim());
+        policy.setValuationReference(request.getValuationReference());
+        policy.setValuationDate(request.getValuationDate());
+        policy.setDocumentsVerified(Boolean.TRUE.equals(request.getDocumentsVerified()));
+        policy.setPolicyTerms(request.getPolicyTerms());
         policy.setPremiumAmount(quotation.getPremiumAmount());
         policy.setCoverageDetails(quotation.getCoverageDetails());
         policy.setStartDate(startDate);
@@ -432,6 +440,14 @@ public class PolicyService {
                 policy.getStartDate(),
                 policy.getEndDate(),
                 policy.getStatus(),
+                policy.getInsurer(),
+                policy.getProduct(),
+                policy.getCertificateNumber(),
+                policy.getCertificateClass(),
+                policy.getValuationReference(),
+                policy.getValuationDate(),
+                policy.isDocumentsVerified(),
+                policy.getPolicyTerms(),
                 policy.getCreatedAt(),
                 policy.getUpdatedAt()
         );

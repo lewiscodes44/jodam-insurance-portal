@@ -81,7 +81,23 @@ public class Policy {
     )
     private String coverageDetails;
 
-    @Column(
+
+    @Column(name = "insurer", length = 150)
+    private String insurer;
+    @Column(name = "product", length = 150)
+    private String product;
+    @Column(name = "certificate_number", length = 80)
+    private String certificateNumber;
+    @Column(name = "certificate_class", length = 40)
+    private String certificateClass;
+    @Column(name = "valuation_reference", length = 100)
+    private String valuationReference;
+    @Column(name = "valuation_date")
+    private LocalDate valuationDate;
+    @Column(name = "documents_verified", nullable = false)
+    private boolean documentsVerified;
+    @Column(name = "policy_terms", length = 5000)
+    private String policyTerms;    @Column(
             name = "start_date",
             nullable = false
     )
@@ -260,4 +276,12 @@ public class Policy {
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
-}
+
+    public String getInsurer(){return insurer;} public void setInsurer(String v){insurer=v;}
+    public String getProduct(){return product;} public void setProduct(String v){product=v;}
+    public String getCertificateNumber(){return certificateNumber;} public void setCertificateNumber(String v){certificateNumber=v;}
+    public String getCertificateClass(){return certificateClass;} public void setCertificateClass(String v){certificateClass=v;}
+    public String getValuationReference(){return valuationReference;} public void setValuationReference(String v){valuationReference=v;}
+    public LocalDate getValuationDate(){return valuationDate;} public void setValuationDate(LocalDate v){valuationDate=v;}
+    public boolean isDocumentsVerified(){return documentsVerified;} public void setDocumentsVerified(boolean v){documentsVerified=v;}
+    public String getPolicyTerms(){return policyTerms;} public void setPolicyTerms(String v){policyTerms=v;}}
