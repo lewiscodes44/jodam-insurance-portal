@@ -1,0 +1,828 @@
+
+============================================================
+FILE: .\src\main\java\ke\co\jodam\insurance\controller\InquiryController.java
+============================================================
+package ke.co.jodam.insurance.controller;
+
+import ke.co.jodam.insurance.dto.inquiry.AssignInquiryRequest;
+import ke.co.jodam.insurance.dto.inquiry.InquiryRequest;
+import ke.co.jodam.insurance.dto.inquiry.InquiryResponse;
+import ke.co.jodam.insurance.service.InquiryService;
+
+import jakarta.validation.Valid;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/inquiries")
+public class InquiryController {
+
+    private final InquiryService inquiryService;
+
+    public InquiryController(InquiryService inquiryService) {
+        this.inquiryService = inquiryService;
+    }
+
+    @PostMapping
+    public ResponseEntity<InquiryResponse> createInquiry(
+            @Valid @RequestBody InquiryRequest request,
+            Authentication authentication
+    ) {
+
+        String username = authentication.getName();
+
+        InquiryResponse response =
+                inquiryService.createInquiry(request, username);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
+
+    @PostMapping("/{inquiryId}/assign")
+    public ResponseEntity<InquiryResponse> assignInquiry(
+            @PathVariable Long inquiryId,
+            @Valid @RequestBody AssignInquiryRequest request,
+            Authentication authentication
+    ) {
+
+        String adminUsername = authentication.getName();
+
+        InquiryResponse response =
+                inquiryService.assignInquiry(
+                        inquiryId,
+                        request,
+                        adminUsername
+                );
+
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/assigned")
+    public ResponseEntity<java.util.List<InquiryResponse>> getAssignedInquiries(
+            Authentication authentication
+    ) {
+
+        String agentUsername = authentication.getName();
+
+        java.util.List<InquiryResponse> inquiries =
+                inquiryService.getAssignedInquiries(agentUsername);
+
+        return ResponseEntity.ok(inquiries);
+    }
+}
+
+============================================================
+FILE: .\src\main\java\ke\co\jodam\insurance\service\InquiryService.java
+============================================================
+package ke.co.jodam.insurance.service;
+
+import ke.co.jodam.insurance.dto.inquiry.AssignInquiryRequest;
+import ke.co.jodam.insurance.dto.inquiry.InquiryRequest;
+import ke.co.jodam.insurance.dto.inquiry.InquiryResponse;
+import ke.co.jodam.insurance.entity.InsuranceInquiry;
+import ke.co.jodam.insurance.entity.InquiryStatus;
+import ke.co.jodam.insurance.entity.User;
+import ke.co.jodam.insurance.repository.InsuranceInquiryRepository;
+import ke.co.jodam.insurance.repository.UserRepository;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class InquiryService {
+
+    private final InsuranceInquiryRepository inquiryRepository;
+    private final UserRepository userRepository;
+
+    public InquiryService(
+            InsuranceInquiryRepository inquiryRepository,
+            UserRepository userRepository
+    ) {
+        this.inquiryRepository = inquiryRepository;
+        this.userRepository = userRepository;
+    }
+
+    @Transactional
+    public InquiryResponse createInquiry(
+            InquiryRequest request,
+            String username
+    ) {
+
+        User customer = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new IllegalStateException("Authenticated user not found")
+                );
+
+        boolean isCustomer = customer.getRoles()
+                .stream()
+                .anyMatch(role -> "CUSTOMER".equals(role.getName()));
+
+        if (!isCustomer) {
+            throw new IllegalStateException(
+                    "Only customers can submit insurance inquiries"
+            );
+        }
+
+        InsuranceInquiry inquiry = new InsuranceInquiry();
+
+        inquiry.setCustomer(customer);
+        inquiry.setInsuranceType(request.getInsuranceType());
+        inquiry.setDescription(request.getDescription());
+        inquiry.setStatus(InquiryStatus.NEW);
+
+        InsuranceInquiry savedInquiry =
+                inquiryRepository.save(inquiry);
+
+        return toResponse(savedInquiry);
+    }
+
+    @Transactional
+    public InquiryResponse assignInquiry(
+            Long inquiryId,
+            AssignInquiryRequest request,
+            String adminUsername
+    ) {
+
+        User admin = userRepository.findByUsername(adminUsername)
+                .orElseThrow(() ->
+                        new IllegalStateException("Authenticated user not found")
+                );
+
+        boolean isAdmin = admin.getRoles()
+                .stream()
+                .anyMatch(role -> "ADMIN".equals(role.getName()));
+
+        if (!isAdmin) {
+            throw new IllegalStateException(
+                    "Only administrators can assign inquiries"
+            );
+        }
+
+        InsuranceInquiry inquiry =
+                inquiryRepository.findById(inquiryId)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Insurance inquiry not found"
+                                )
+                        );
+
+        if (inquiry.getStatus() != InquiryStatus.NEW) {
+            throw new IllegalStateException(
+                    "Only new inquiries can be assigned"
+            );
+        }
+
+        User agent = userRepository
+                .findByUsername(request.getAgentUsername())
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Agent not found"
+                        )
+                );
+
+        boolean isAgent = agent.getRoles()
+                .stream()
+                .anyMatch(role -> "AGENT".equals(role.getName()));
+
+        if (!isAgent) {
+            throw new IllegalArgumentException(
+                    "Selected user is not an agent"
+            );
+        }
+
+        inquiry.setAssignedAgent(agent);
+        inquiry.setStatus(InquiryStatus.ASSIGNED);
+
+        InsuranceInquiry savedInquiry =
+                inquiryRepository.save(inquiry);
+
+        return toResponse(savedInquiry);
+    }
+
+    @Transactional(readOnly = true)
+    public List<InquiryResponse> getAssignedInquiries(
+            String agentUsername
+    ) {
+
+        User agent = userRepository.findByUsername(agentUsername)
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "Authenticated user not found"
+                        )
+                );
+
+        boolean isAgent = agent.getRoles()
+                .stream()
+                .anyMatch(role -> "AGENT".equals(role.getName()));
+
+        if (!isAgent) {
+            throw new IllegalStateException(
+                    "Only agents can view assigned inquiries"
+            );
+        }
+
+        return inquiryRepository.findByAssignedAgent(agent)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private InquiryResponse toResponse(
+            InsuranceInquiry inquiry
+    ) {
+
+        String assignedAgentUsername = null;
+
+        if (inquiry.getAssignedAgent() != null) {
+            assignedAgentUsername =
+                    inquiry.getAssignedAgent().getUsername();
+        }
+
+        return new InquiryResponse(
+                inquiry.getId(),
+                inquiry.getInsuranceType(),
+                inquiry.getDescription(),
+                inquiry.getStatus(),
+                inquiry.getCustomer().getUsername(),
+                assignedAgentUsername,
+                inquiry.getCreatedAt(),
+                inquiry.getUpdatedAt()
+        );
+    }
+}
+
+============================================================
+FILE: .\src\main\java\ke\co\jodam\insurance\controller\QuotationController.java
+============================================================
+package ke.co.jodam.insurance.controller;
+
+import ke.co.jodam.insurance.dto.quotation.QuotationRequest;
+import ke.co.jodam.insurance.dto.quotation.QuotationResponse;
+import ke.co.jodam.insurance.service.QuotationService;
+
+import jakarta.validation.Valid;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/quotations")
+public class QuotationController {
+
+    private final QuotationService quotationService;
+
+    public QuotationController(QuotationService quotationService) {
+        this.quotationService = quotationService;
+    }
+
+    @PostMapping("/inquiry/{inquiryId}")
+    public ResponseEntity<QuotationResponse> createQuotation(
+            @PathVariable Long inquiryId,
+            @Valid @RequestBody QuotationRequest request,
+            Authentication authentication
+    ) {
+
+        String agentUsername = authentication.getName();
+
+        QuotationResponse response =
+                quotationService.createQuotation(
+                        inquiryId,
+                        request,
+                        agentUsername
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<QuotationResponse>> getMyQuotations(
+            Authentication authentication
+    ) {
+
+        String customerUsername = authentication.getName();
+
+        List<QuotationResponse> quotations =
+                quotationService.getMyQuotations(
+                        customerUsername
+                );
+
+        return ResponseEntity.ok(quotations);
+    }
+
+    @PostMapping("/{quotationId}/accept")
+    public ResponseEntity<QuotationResponse> acceptQuotation(
+            @PathVariable Long quotationId,
+            Authentication authentication
+    ) {
+
+        String customerUsername = authentication.getName();
+
+        QuotationResponse response =
+                quotationService.acceptQuotation(
+                        quotationId,
+                        customerUsername
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{quotationId}/reject")
+    public ResponseEntity<QuotationResponse> rejectQuotation(
+            @PathVariable Long quotationId,
+            Authentication authentication
+    ) {
+
+        String customerUsername = authentication.getName();
+
+        QuotationResponse response =
+                quotationService.rejectQuotation(
+                        quotationId,
+                        customerUsername
+                );
+
+        return ResponseEntity.ok(response);
+    }
+}
+
+============================================================
+FILE: .\src\main\java\ke\co\jodam\insurance\service\QuotationService.java
+============================================================
+package ke.co.jodam.insurance.service;
+
+import ke.co.jodam.insurance.dto.quotation.QuotationRequest;
+import ke.co.jodam.insurance.dto.quotation.QuotationResponse;
+import ke.co.jodam.insurance.entity.InsuranceInquiry;
+import ke.co.jodam.insurance.entity.InquiryStatus;
+import ke.co.jodam.insurance.entity.Quotation;
+import ke.co.jodam.insurance.entity.User;
+import ke.co.jodam.insurance.repository.InsuranceInquiryRepository;
+import ke.co.jodam.insurance.repository.QuotationRepository;
+import ke.co.jodam.insurance.repository.UserRepository;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class QuotationService {
+
+    private final QuotationRepository quotationRepository;
+    private final InsuranceInquiryRepository inquiryRepository;
+    private final UserRepository userRepository;
+
+    public QuotationService(
+            QuotationRepository quotationRepository,
+            InsuranceInquiryRepository inquiryRepository,
+            UserRepository userRepository
+    ) {
+        this.quotationRepository = quotationRepository;
+        this.inquiryRepository = inquiryRepository;
+        this.userRepository = userRepository;
+    }
+
+    @Transactional
+    public QuotationResponse createQuotation(
+            Long inquiryId,
+            QuotationRequest request,
+            String agentUsername
+    ) {
+
+        User agent = userRepository.findByUsername(agentUsername)
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "Authenticated user not found"
+                        )
+                );
+
+        boolean isAgent = agent.getRoles()
+                .stream()
+                .anyMatch(role -> "AGENT".equals(role.getName()));
+
+        if (!isAgent) {
+            throw new IllegalStateException(
+                    "Only agents can create quotations"
+            );
+        }
+
+        InsuranceInquiry inquiry =
+                inquiryRepository.findById(inquiryId)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Insurance inquiry not found"
+                                )
+                        );
+
+        if (inquiry.getAssignedAgent() == null ||
+                !inquiry.getAssignedAgent()
+                        .getId()
+                        .equals(agent.getId())) {
+
+            throw new IllegalStateException(
+                    "This inquiry is not assigned to you"
+            );
+        }
+
+        if (inquiry.getStatus() != InquiryStatus.ASSIGNED) {
+            throw new IllegalStateException(
+                    "Only assigned inquiries can be quoted"
+            );
+        }
+
+        if (quotationRepository.findByInquiry(inquiry).isPresent()) {
+            throw new IllegalStateException(
+                    "A quotation already exists for this inquiry"
+            );
+        }
+
+        Quotation quotation = new Quotation();
+
+        quotation.setInquiry(inquiry);
+        quotation.setAgent(agent);
+        quotation.setPremiumAmount(request.getPremiumAmount());
+        quotation.setCoverageDetails(request.getCoverageDetails());
+        quotation.setValidUntil(request.getValidUntil());
+
+        Quotation savedQuotation =
+                quotationRepository.save(quotation);
+
+        inquiry.setStatus(InquiryStatus.QUOTED);
+        inquiryRepository.save(inquiry);
+
+        return toResponse(savedQuotation);
+    }
+
+    @Transactional(readOnly = true)
+    public List<QuotationResponse> getMyQuotations(
+            String customerUsername
+    ) {
+
+        User customer = userRepository
+                .findByUsername(customerUsername)
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "Authenticated user not found"
+                        )
+                );
+
+        boolean isCustomer = customer.getRoles()
+                .stream()
+                .anyMatch(role -> "CUSTOMER".equals(role.getName()));
+
+        if (!isCustomer) {
+            throw new IllegalStateException(
+                    "Only customers can view their quotations"
+            );
+        }
+
+        return quotationRepository
+                .findByInquiry_Customer(customer)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional
+    public QuotationResponse acceptQuotation(
+            Long quotationId,
+            String customerUsername
+    ) {
+
+        Quotation quotation = quotationRepository.findById(quotationId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Quotation not found"
+                        )
+                );
+
+        InsuranceInquiry inquiry = quotation.getInquiry();
+
+        User customer = userRepository
+                .findByUsername(customerUsername)
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "Authenticated user not found"
+                        )
+                );
+
+        boolean isCustomer = customer.getRoles()
+                .stream()
+                .anyMatch(role -> "CUSTOMER".equals(role.getName()));
+
+        if (!isCustomer) {
+            throw new IllegalStateException(
+                    "Only customers can accept quotations"
+            );
+        }
+
+        if (!inquiry.getCustomer()
+                .getId()
+                .equals(customer.getId())) {
+
+            throw new IllegalStateException(
+                    "You are not authorized to accept this quotation"
+            );
+        }
+
+        if (inquiry.getStatus() != InquiryStatus.QUOTED) {
+            throw new IllegalStateException(
+                    "Only quoted inquiries can be accepted"
+            );
+        }
+
+        inquiry.setStatus(InquiryStatus.ACCEPTED);
+        inquiryRepository.save(inquiry);
+
+        return toResponse(quotation);
+    }
+
+    @Transactional
+    public QuotationResponse rejectQuotation(
+            Long quotationId,
+            String customerUsername
+    ) {
+
+        Quotation quotation = quotationRepository.findById(quotationId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Quotation not found"
+                        )
+                );
+
+        InsuranceInquiry inquiry = quotation.getInquiry();
+
+        User customer = userRepository
+                .findByUsername(customerUsername)
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "Authenticated user not found"
+                        )
+                );
+
+        boolean isCustomer = customer.getRoles()
+                .stream()
+                .anyMatch(role -> "CUSTOMER".equals(role.getName()));
+
+        if (!isCustomer) {
+            throw new IllegalStateException(
+                    "Only customers can reject quotations"
+            );
+        }
+
+        if (!inquiry.getCustomer()
+                .getId()
+                .equals(customer.getId())) {
+
+            throw new IllegalStateException(
+                    "You are not authorized to reject this quotation"
+            );
+        }
+
+        if (inquiry.getStatus() != InquiryStatus.QUOTED) {
+            throw new IllegalStateException(
+                    "Only quoted inquiries can be rejected"
+            );
+        }
+
+        inquiry.setStatus(InquiryStatus.REJECTED);
+        inquiryRepository.save(inquiry);
+
+        return toResponse(quotation);
+    }
+
+    private QuotationResponse toResponse(
+            Quotation quotation
+    ) {
+
+        return new QuotationResponse(
+                quotation.getId(),
+                quotation.getInquiry().getId(),
+                quotation.getInquiry()
+                        .getCustomer()
+                        .getUsername(),
+                quotation.getAgent().getUsername(),
+                quotation.getPremiumAmount(),
+                quotation.getCoverageDetails(),
+                quotation.getValidUntil(),
+                quotation.getCreatedAt()
+        );
+    }
+}
+
+============================================================
+FILE: .\src\main\java\ke\co\jodam\insurance\controller\PolicyController.java
+============================================================
+package ke.co.jodam.insurance.controller;
+
+import ke.co.jodam.insurance.dto.policy.PolicyRequest;
+import ke.co.jodam.insurance.dto.policy.PolicyResponse;
+import ke.co.jodam.insurance.service.PolicyService;
+
+import jakarta.validation.Valid;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/policies")
+public class PolicyController {
+
+    private final PolicyService policyService;
+
+    public PolicyController(PolicyService policyService) {
+        this.policyService = policyService;
+    }
+
+    @PostMapping("/quotation/{quotationId}")
+    public ResponseEntity<PolicyResponse> issuePolicy(
+            @PathVariable Long quotationId,
+            @Valid @RequestBody PolicyRequest request,
+            Authentication authentication
+    ) {
+
+        String agentUsername = authentication.getName();
+
+        PolicyResponse response =
+                policyService.issuePolicy(
+                        quotationId,
+                        request,
+                        agentUsername
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
+}
+
+============================================================
+FILE: .\src\main\java\ke\co\jodam\insurance\service\PolicyService.java
+============================================================
+package ke.co.jodam.insurance.service;
+
+import ke.co.jodam.insurance.dto.policy.PolicyRequest;
+import ke.co.jodam.insurance.dto.policy.PolicyResponse;
+import ke.co.jodam.insurance.entity.InsuranceInquiry;
+import ke.co.jodam.insurance.entity.InquiryStatus;
+import ke.co.jodam.insurance.entity.Policy;
+import ke.co.jodam.insurance.entity.PolicyStatus;
+import ke.co.jodam.insurance.entity.Quotation;
+import ke.co.jodam.insurance.entity.User;
+import ke.co.jodam.insurance.repository.InsuranceInquiryRepository;
+import ke.co.jodam.insurance.repository.PolicyRepository;
+import ke.co.jodam.insurance.repository.QuotationRepository;
+import ke.co.jodam.insurance.repository.UserRepository;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+@Service
+public class PolicyService {
+
+    private final PolicyRepository policyRepository;
+    private final QuotationRepository quotationRepository;
+    private final InsuranceInquiryRepository inquiryRepository;
+    private final UserRepository userRepository;
+
+    public PolicyService(
+            PolicyRepository policyRepository,
+            QuotationRepository quotationRepository,
+            InsuranceInquiryRepository inquiryRepository,
+            UserRepository userRepository
+    ) {
+        this.policyRepository = policyRepository;
+        this.quotationRepository = quotationRepository;
+        this.inquiryRepository = inquiryRepository;
+        this.userRepository = userRepository;
+    }
+
+    @Transactional
+    public PolicyResponse issuePolicy(
+            Long quotationId,
+            PolicyRequest request,
+            String agentUsername
+    ) {
+
+        User agent = userRepository.findByUsername(agentUsername)
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "Authenticated user not found"
+                        )
+                );
+
+        boolean isAgent = agent.getRoles()
+                .stream()
+                .anyMatch(role -> "AGENT".equals(role.getName()));
+
+        if (!isAgent) {
+            throw new IllegalStateException(
+                    "Only agents can issue policies"
+            );
+        }
+
+        Quotation quotation = quotationRepository
+                .findById(quotationId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Quotation not found"
+                        )
+                );
+
+        InsuranceInquiry inquiry = quotation.getInquiry();
+
+        if (inquiry.getAssignedAgent() == null ||
+                !inquiry.getAssignedAgent()
+                        .getId()
+                        .equals(agent.getId())) {
+
+            throw new IllegalStateException(
+                    "This quotation is not assigned to you"
+            );
+        }
+
+        if (inquiry.getStatus() != InquiryStatus.ACCEPTED) {
+            throw new IllegalStateException(
+                    "Only accepted quotations can be converted into policies"
+            );
+        }
+
+        if (policyRepository.findByQuotationId(quotationId).isPresent()) {
+            throw new IllegalStateException(
+                    "A policy already exists for this quotation"
+            );
+        }
+
+        LocalDate startDate = request.getStartDate();
+        LocalDate endDate = startDate.plusMonths(
+                request.getDurationMonths()
+        ).minusDays(1);
+
+        Policy policy = new Policy();
+
+        policy.setPolicyNumber(generatePolicyNumber(quotationId));
+        policy.setInquiry(inquiry);
+        policy.setQuotation(quotation);
+        policy.setCustomer(inquiry.getCustomer());
+        policy.setAgent(agent);
+        policy.setInsuranceType(inquiry.getInsuranceType());
+        policy.setPremiumAmount(quotation.getPremiumAmount());
+        policy.setCoverageDetails(quotation.getCoverageDetails());
+        policy.setStartDate(startDate);
+        policy.setEndDate(endDate);
+        policy.setStatus(PolicyStatus.PENDING_PAYMENT);
+
+        Policy savedPolicy = policyRepository.save(policy);
+
+        inquiry.setStatus(InquiryStatus.CONVERTED);
+        inquiryRepository.save(inquiry);
+
+        return toResponse(savedPolicy);
+    }
+
+    private String generatePolicyNumber(Long quotationId) {
+
+        String date = LocalDate.now()
+                .format(DateTimeFormatter.BASIC_ISO_DATE);
+
+        return "JODAM-"
+                + date
+                + "-"
+                + String.format("%06d", quotationId);
+    }
+
+    private PolicyResponse toResponse(Policy policy) {
+
+        return new PolicyResponse(
+                policy.getId(),
+                policy.getPolicyNumber(),
+                policy.getInquiry().getId(),
+                policy.getQuotation().getId(),
+                policy.getCustomer().getUsername(),
+                policy.getAgent().getUsername(),
+                policy.getInsuranceType(),
+                policy.getPremiumAmount(),
+                policy.getCoverageDetails(),
+                policy.getStartDate(),
+                policy.getEndDate(),
+                policy.getStatus(),
+                policy.getCreatedAt(),
+                policy.getUpdatedAt()
+        );
+    }
+}
