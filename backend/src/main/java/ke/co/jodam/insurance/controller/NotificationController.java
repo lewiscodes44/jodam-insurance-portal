@@ -6,6 +6,7 @@ import ke.co.jodam.insurance.service.NotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,4 +36,6 @@ public class NotificationController {
                 )
         );
     }
+    @PostMapping("/read-all")
+    public ResponseEntity<Void> markRead(Authentication authentication) { notificationService.markMyNotificationsRead(authentication.getName()); return ResponseEntity.noContent().build(); }
 }

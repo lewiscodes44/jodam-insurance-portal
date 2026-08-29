@@ -15,6 +15,7 @@ public class NotificationResponse {
     private NotificationStatus status;
     private String failureReason;
     private LocalDateTime sentAt;
+    private LocalDateTime readAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -29,7 +30,7 @@ public class NotificationResponse {
             String message,
             NotificationStatus status,
             String failureReason,
-            LocalDateTime sentAt,
+            LocalDateTime sentAt, LocalDateTime readAt,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
@@ -41,6 +42,7 @@ public class NotificationResponse {
         this.status = status;
         this.failureReason = failureReason;
         this.sentAt = sentAt;
+        this.readAt = readAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -80,6 +82,7 @@ public class NotificationResponse {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+    public LocalDateTime getReadAt() { return readAt; }
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;

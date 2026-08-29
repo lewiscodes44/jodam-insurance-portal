@@ -146,6 +146,13 @@ public class NotificationService {
                 .map(this::toResponse)
                 .toList();
     }
+    @Transactional
+    public void markMyNotificationsRead(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+        List<Notification> unread = notificationRepository.findByUserAndReadAtIsNull(user);
+        unread.forEach(n -> n.setReadAt(java.time.LocalDateTime.now()));
+        notificationRepository.saveAll(unread);
+    }
 
     private void createNotification(
             User user,
@@ -234,6 +241,7 @@ public class NotificationService {
                 notification.getStatus(),
                 notification.getFailureReason(),
                 notification.getSentAt(),
+                notification.getReadAt(),
                 notification.getCreatedAt(),
                 notification.getUpdatedAt()
         );

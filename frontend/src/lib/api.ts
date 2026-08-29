@@ -33,7 +33,7 @@ export type InquiryApplication = {
   insurerDeclined?: string; insurerPremiumIncrease?: string; noClaimDiscount?: string; additionalCovers?: Record<string, boolean>; additionalNotes?: string; declarationsAccepted?: boolean;
 }
 export type Inquiry = { id:number; insuranceType:string; description:string; applicationData?:InquiryApplication; status:string; customerUsername:string; assignedAgentUsername?:string; createdAt:string; updatedAt:string }
-export type Notification = { id:number; channel:string; recipient:string; subject?:string; message:string; status:string; createdAt:string; updatedAt:string }
+export type Notification = { id:number; channel:string; recipient:string; subject?:string; message:string; status:string; readAt?:string; createdAt:string; updatedAt:string }
 export type Claim = { id:number; claimNumber:string; policyId:number; policyNumber:string; customerUsername:string; assignedAgentUsername?:string; incidentDate:string; description:string; claimedAmount:number; status:string; decisionReason?:string; approvedAmount?:number; reviewedAt?:string; settledAt?:string; closedAt?:string; createdAt:string; updatedAt:string }
 export type Payment = { id:number; policyId:number; policyNumber:string; amount:number; phoneNumber:string; transactionReference?:string; checkoutRequestId?:string; status:string; createdAt:string; updatedAt:string }
 export type Dashboard = { totalInquiries:number; newInquiries:number; assignedInquiries:number; quotedInquiries:number; acceptedInquiries:number; rejectedInquiries:number; convertedInquiries:number; totalPolicies:number; pendingPaymentPolicies:number; activePolicies:number; expiredPolicies:number; cancelledPolicies:number; totalPayments:number; pendingPayments:number; processingPayments:number; completedPayments:number; failedPayments:number; cancelledPayments:number; totalCompletedPaymentAmount:number }
@@ -66,6 +66,7 @@ export const cancelPolicy = (policyId:number, reason:string) => apiRequest<Polic
 export const initiatePayment = (policyId:number, phoneNumber:string) => apiRequest<Payment>(`/api/payments/policy/${policyId}`, { method:'POST', body:JSON.stringify({phoneNumber}) })
 export const queryPayment = (paymentId:number) => apiRequest<Payment>(`/api/payments/${paymentId}/query`, { method:'POST' })
 export const getMyNotifications = () => apiRequest<Notification[]>('/api/notifications/my')
+export const markNotificationsRead = () => apiRequest<void>('/api/notifications/read-all', {method:'POST'})
 export const getMyClaims = () => apiRequest<Claim[]>('/api/claims/my')
 export const getAllClaims = () => apiRequest<Claim[]>('/api/claims/all')
 export const getAssignedClaims = () => apiRequest<Claim[]>('/api/claims/assigned')

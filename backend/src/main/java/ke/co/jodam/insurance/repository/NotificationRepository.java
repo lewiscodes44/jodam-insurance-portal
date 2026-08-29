@@ -23,4 +23,6 @@ public interface NotificationRepository
 
     List<Notification>
     findAllByOrderByIdDesc();
+
+    List<Notification> findByUserAndReadAtIsNull(User user);
 }

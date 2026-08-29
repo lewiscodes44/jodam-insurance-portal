@@ -84,6 +84,7 @@ public class Notification {
             name = "sent_at"
     )
     private LocalDateTime sentAt;
+    @Column(name = "read_at") private LocalDateTime readAt;
 
     @Column(
             name = "created_at",
@@ -215,6 +216,8 @@ public class Notification {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+    public LocalDateTime getReadAt() { return readAt; }
+    public void setReadAt(LocalDateTime value) { readAt = value; }
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
