@@ -13,9 +13,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(()=>{getMyNotifications().then(items=>setUnread(items.filter(n=>!n.readAt).length)).catch(()=>{})},[location.pathname])
   const links = [
     { to: '/app', label: 'Overview' },
+    { to: '/app/enquiries', label: 'My inquiries' },
+    { to: '/app/quotations', label: 'My quotations' },
     { to: '/app/policies', label: 'My policies' },
-    { to: '/app/quotations', label: 'Quotations' },
-    { to: '/app/claims', label: 'Claims' },
+    { to: '/app/claims', label: 'My claims' },
     { to: '/app/notifications', label: 'Notifications' },
   ]
 

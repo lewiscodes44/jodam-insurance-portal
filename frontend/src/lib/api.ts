@@ -32,7 +32,7 @@ export type InquiryApplication = {
   previousInsurance?: string; previousInsurer?: string; accidentHistory?: { date:string; cost:string; details:string }[];
   insurerDeclined?: string; insurerPremiumIncrease?: string; noClaimDiscount?: string; additionalCovers?: Record<string, boolean>; additionalNotes?: string; declarationsAccepted?: boolean;
 }
-export type Inquiry = { id:number; insuranceType:string; description:string; applicationData?:InquiryApplication; status:string; customerUsername:string; assignedAgentUsername?:string; createdAt:string; updatedAt:string }
+export type Inquiry = { id:number; insuranceType:string; description:string; applicationData?:InquiryApplication; status:string; customerUsername:string; customerFullName?:string; customerEmail?:string; customerPhoneNumber?:string; assignedAgentUsername?:string; createdAt:string; updatedAt:string }
 export type Notification = { id:number; channel:string; recipient:string; subject?:string; message:string; status:string; readAt?:string; createdAt:string; updatedAt:string }
 export type Claim = { id:number; claimNumber:string; policyId:number; policyNumber:string; customerUsername:string; assignedAgentUsername?:string; incidentDate:string; description:string; claimedAmount:number; status:string; decisionReason?:string; approvedAmount?:number; reviewedAt?:string; settledAt?:string; closedAt?:string; createdAt:string; updatedAt:string }
 export type Payment = { id:number; policyId:number; policyNumber:string; amount:number; phoneNumber:string; transactionReference?:string; checkoutRequestId?:string; status:string; createdAt:string; updatedAt:string }
@@ -59,7 +59,7 @@ export const getQuotationForInquiry = (inquiryId:number) => apiRequest<Quotation
 export const acceptQuotation = (id:number) => apiRequest<Quotation>(`/api/quotations/${id}/accept`, { method:'POST' })
 export const rejectQuotation = (id:number) => apiRequest<Quotation>(`/api/quotations/${id}/reject`, { method:'POST' })
 export const requestQuotationReview = (id:number, message:string) => apiRequest<Quotation>(`/api/quotations/${id}/request-review`, { method:'POST', body:JSON.stringify({message}) })
-export type IssuePolicyPayload = { startDate:string; durationMonths:number; certificateNumber:string; certificateClass:string; valuationReference?:string; valuationDate?:string; documentsVerified:boolean; policyTerms?:string }
+export type IssuePolicyPayload = { startDate:string; durationMonths:number; certificateClass:string; valuationReference?:string; valuationDate?:string; documentsVerified:boolean; policyTerms?:string }
 export const issuePolicy = (quotationId:number, payload:IssuePolicyPayload) => apiRequest<Policy>(`/api/policies/quotation/${quotationId}`, { method:'POST', body:JSON.stringify(payload) })
 export const renewPolicy = (policyId:number, newEndDate:string) => apiRequest<Policy>(`/api/policies/${policyId}/renew`, { method:'POST', body:JSON.stringify({newEndDate}) })
 export const cancelPolicy = (policyId:number, reason:string) => apiRequest<Policy>(`/api/policies/${policyId}/cancel`, { method:'POST', body:JSON.stringify({reason}) })

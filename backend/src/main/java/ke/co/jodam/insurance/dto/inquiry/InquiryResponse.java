@@ -13,6 +13,9 @@ public class InquiryResponse {
     private Map<String, Object> applicationData;
     private InquiryStatus status;
     private String customerUsername;
+    private String customerFullName;
+    private String customerEmail;
+    private String customerPhoneNumber;
     private String assignedAgentUsername;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -21,7 +24,9 @@ public class InquiryResponse {
 
     public InquiryResponse(Long id, String insuranceType, String description,
                            Map<String, Object> applicationData, InquiryStatus status,
-                           String customerUsername, String assignedAgentUsername,
+                           String customerUsername, String customerFullName,
+                           String customerEmail, String customerPhoneNumber,
+                           String assignedAgentUsername,
                            LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.insuranceType = insuranceType;
@@ -29,6 +34,9 @@ public class InquiryResponse {
         this.applicationData = applicationData;
         this.status = status;
         this.customerUsername = customerUsername;
+        this.customerFullName = customerFullName;
+        this.customerEmail = customerEmail;
+        this.customerPhoneNumber = customerPhoneNumber;
         this.assignedAgentUsername = assignedAgentUsername;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -40,6 +48,9 @@ public class InquiryResponse {
     public Map<String, Object> getApplicationData() { return applicationData; }
     public InquiryStatus getStatus() { return status; }
     public String getCustomerUsername() { return customerUsername; }
+    public String getCustomerFullName() { return customerFullName; }
+    public String getCustomerEmail() { return customerEmail; }
+    public String getCustomerPhoneNumber() { return customerPhoneNumber; }
     public String getAssignedAgentUsername() { return assignedAgentUsername; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

@@ -243,6 +243,10 @@ public class InquiryService {
                 applicationData,
                 inquiry.getStatus(),
                 inquiry.getCustomer().getUsername(),
+                (inquiry.getCustomer().getFirstName() + " "
+                        + inquiry.getCustomer().getLastName()).trim(),
+                inquiry.getCustomer().getEmail(),
+                inquiry.getCustomer().getPhoneNumber(),
                 assignedAgentUsername,
                 inquiry.getCreatedAt(),
                 inquiry.getUpdatedAt()

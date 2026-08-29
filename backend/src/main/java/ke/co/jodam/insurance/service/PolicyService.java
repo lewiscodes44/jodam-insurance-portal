@@ -121,7 +121,7 @@ public class PolicyService {
         policy.setInsuranceType(inquiry.getInsuranceType());
         policy.setInsurer(quotation.getInsurer());
         policy.setProduct(quotation.getProduct());
-        policy.setCertificateNumber(request.getCertificateNumber().trim());
+        policy.setCertificateNumber(generateCertificateNumber(quotationId));
         policy.setCertificateClass(request.getCertificateClass().trim());
         policy.setValuationReference(request.getValuationReference());
         policy.setValuationDate(request.getValuationDate());
@@ -422,6 +422,15 @@ public class PolicyService {
                 "%06d",
                 quotationId
         );
+    }
+
+    private String generateCertificateNumber(
+            Long quotationId
+    ) {
+        return "JODAM-CERT-"
+                + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
+                + "-"
+                + String.format("%06d", quotationId);
     }
 
     private PolicyResponse toResponse(

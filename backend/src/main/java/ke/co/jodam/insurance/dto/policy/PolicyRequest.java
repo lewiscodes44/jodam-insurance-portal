@@ -17,7 +17,6 @@ public class PolicyRequest {
     @Min(value = 1, message = "Policy duration must be at least 1 month")
     @Max(value = 120, message = "Policy duration cannot exceed 120 months")
     private Integer durationMonths;
-    @NotBlank(message = "Certificate number is required")
     @Size(max = 80)
     private String certificateNumber;
     @NotBlank(message = "Certificate class is required")
