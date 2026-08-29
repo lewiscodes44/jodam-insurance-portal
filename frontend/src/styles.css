@@ -170,7 +170,8 @@ button { cursor: pointer; }
 .notice-banner { margin: 18px 0; display: flex; align-items: center; gap: 14px; padding: 16px 18px; border: 1px solid #ffd6db; background: #fff6f7; border-radius: 16px; }
 .notice-banner p { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
 .notice-banner .text-link { margin-left: auto; }
-.dashboard-grid { margin-top: 18px; display: grid; grid-template-columns: 1.35fr .65fr; gap: 18px; }
+.dashboard-grid { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.dashboard-grid > .panel--wide { grid-column: 1 / -1; }
 .dashboard-grid--lower { grid-template-columns: 1fr 1fr; }
 .panel { background: #fff; border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow-sm); padding: 22px; }
 .panel__header { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin-bottom: 18px; }

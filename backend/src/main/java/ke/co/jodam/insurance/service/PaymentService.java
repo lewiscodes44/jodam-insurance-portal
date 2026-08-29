@@ -7,6 +7,7 @@ import ke.co.jodam.insurance.dto.payment.PaymentRequest;
 import ke.co.jodam.insurance.dto.payment.PaymentResponse;
 import ke.co.jodam.insurance.entity.Payment;
 import ke.co.jodam.insurance.entity.PaymentStatus;
+import ke.co.jodam.insurance.entity.InquiryStatus;
 import ke.co.jodam.insurance.entity.Policy;
 import ke.co.jodam.insurance.entity.PolicyStatus;
 import ke.co.jodam.insurance.entity.User;
@@ -508,6 +509,8 @@ public class PaymentService {
                                 policy
                         );
 
+                policy.getInquiry().setStatus(InquiryStatus.CONVERTED);
+
                 System.out.println(
                         "POLICY ACTIVATED SUCCESSFULLY"
                 );
@@ -766,6 +769,8 @@ public class PaymentService {
                         .saveAndFlush(
                                 policy
                         );
+
+                policy.getInquiry().setStatus(InquiryStatus.CONVERTED);
 
                 System.out.println(
                         "POLICY ACTIVATED SUCCESSFULLY"
