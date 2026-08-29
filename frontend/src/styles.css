@@ -113,6 +113,14 @@ button { cursor: pointer; }
 .auth-card__intro p { margin: 0; color: var(--muted); line-height: 1.55; }
 .form-stack { margin-top: 28px; display: grid; gap: 16px; }
 .form-stack label { display: grid; gap: 8px; font-size: 12px; font-weight: 700; }
+.form-stack fieldset { display: grid; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin: 0; }
+.form-stack fieldset label { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.form-stack fieldset input[type="checkbox"] { min-height: 0; width: 18px; height: 18px; padding: 0; accent-color: var(--red); flex: 0 0 auto; }
+.document-upload-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.document-upload { display: grid; gap: 6px; padding: 16px; border: 1px dashed var(--line); border-radius: 12px; background: var(--surface-soft); cursor: pointer; }
+.document-upload span { color: var(--muted); font-size: 12px; }
+.document-upload input { font-size: 12px; max-width: 100%; }
+@media (max-width: 700px) { .document-upload-grid { grid-template-columns: 1fr; } }
 .form-stack input { min-height: 48px; padding: 0 14px; border: 1px solid var(--line); border-radius: 12px; outline: none; background: #fff; }
 .form-stack input:focus { border-color: rgba(226,26,45,.55); box-shadow: 0 0 0 4px rgba(226,26,45,.08); }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }

@@ -3,7 +3,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ?? ''
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('jodam.token')
   const headers = new Headers(options.headers)
-  if (!headers.has('Content-Type') && options.body) headers.set('Content-Type', 'application/json')
+  if (!headers.has('Content-Type') && options.body && !(options.body instanceof FormData)) headers.set('Content-Type', 'application/json')
   if (token) headers.set('Authorization', `Bearer ${token}`)
   const response = await fetch(`${API_BASE}${path}`, { ...options, headers })
   if (!response.ok) {
@@ -38,6 +38,7 @@ export type Claim = { id:number; claimNumber:string; policyId:number; policyNumb
 export type Payment = { id:number; policyId:number; policyNumber:string; amount:number; phoneNumber:string; transactionReference?:string; checkoutRequestId?:string; status:string; createdAt:string; updatedAt:string }
 export type Dashboard = { totalInquiries:number; newInquiries:number; assignedInquiries:number; quotedInquiries:number; acceptedInquiries:number; rejectedInquiries:number; convertedInquiries:number; totalPolicies:number; pendingPaymentPolicies:number; activePolicies:number; expiredPolicies:number; cancelledPolicies:number; totalPayments:number; pendingPayments:number; processingPayments:number; completedPayments:number; failedPayments:number; cancelledPayments:number; totalCompletedPaymentAmount:number }
 export type StaffSummary = { id:number; username:string; firstName:string; lastName:string; email:string; phoneNumber?:string; role:string; active:boolean }
+export type CustomerDocument = { id:number; documentType:string; filename:string; contentType:string; inquiryId?:number; uploadedAt:string }
 
 export const getMyPolicies = () => apiRequest<Policy[]>('/api/policies/my')
 export const getAllPolicies = () => apiRequest<Policy[]>('/api/policies/all')
@@ -77,3 +78,8 @@ export const getAdminDashboard = () => apiRequest<Dashboard>('/api/admin/reports
 export const getInquiryReport = () => apiRequest<Inquiry[]>('/api/admin/reports/inquiries')
 export const getPaymentReport = () => apiRequest<Payment[]>('/api/admin/reports/payments')
 export const getAgents = () => apiRequest<StaffSummary[]>('/api/staff/agents')
+export const getProfileDocuments = () => apiRequest<CustomerDocument[]>('/api/documents/profile')
+export const getCustomerProfileDocuments = (username:string) => apiRequest<CustomerDocument[]>(`/api/documents/customers/${username}`)
+export const getInquiryDocuments = (inquiryId:number) => apiRequest<CustomerDocument[]>(`/api/documents/inquiries/${inquiryId}`)
+export const uploadProfileDocument = (type:string, file:File) => { const body=new FormData(); body.append('file',file); return apiRequest<CustomerDocument>(`/api/documents/profile/${type}`,{method:'POST',body}) }
+export const uploadInquiryDocument = (inquiryId:number,type:string,file:File) => { const body=new FormData(); body.append('file',file); return apiRequest<CustomerDocument>(`/api/documents/inquiries/${inquiryId}/${type}`,{method:'POST',body}) }
