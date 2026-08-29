@@ -67,6 +67,7 @@ export const initiatePayment = (policyId:number, phoneNumber:string) => apiReque
 export const queryPayment = (paymentId:number) => apiRequest<Payment>(`/api/payments/${paymentId}/query`, { method:'POST' })
 export const getMyNotifications = () => apiRequest<Notification[]>('/api/notifications/my')
 export const markNotificationsRead = () => apiRequest<void>('/api/notifications/read-all', {method:'POST'})
+export const markNotificationRead = (id:number) => apiRequest<void>(`/api/notifications/${id}/read`, {method:'POST'})
 export const getMyClaims = () => apiRequest<Claim[]>('/api/claims/my')
 export const getAllClaims = () => apiRequest<Claim[]>('/api/claims/all')
 export const getAssignedClaims = () => apiRequest<Claim[]>('/api/claims/assigned')

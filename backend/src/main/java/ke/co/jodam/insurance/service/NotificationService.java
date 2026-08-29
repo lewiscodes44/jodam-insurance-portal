@@ -153,6 +153,13 @@ public class NotificationService {
         unread.forEach(n -> n.setReadAt(java.time.LocalDateTime.now()));
         notificationRepository.saveAll(unread);
     }
+    @Transactional
+    public void markNotificationRead(Long notificationId, String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+        Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new IllegalArgumentException("Notification not found"));
+        if (!notification.getUser().getId().equals(user.getId())) throw new IllegalStateException("You are not authorized to read this notification");
+        if (notification.getReadAt() == null) { notification.setReadAt(java.time.LocalDateTime.now()); notificationRepository.save(notification); }
+    }
 
     private void createNotification(
             User user,

@@ -159,6 +159,12 @@ button { cursor: pointer; }
 .stat-card { padding: 20px; background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow-sm); }
 .stat-card { color: inherit; transition: transform .16s ease, box-shadow .16s ease; }
 .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.notification-groups { display: grid; gap: 28px; }
+.notification-section { display: grid; gap: 12px; }
+.notification-section > .panel__header { padding: 0 4px; }
+.notification-card--unread { border-color: rgba(226,26,45,.32); background: #fffafa; }
+.notification-card--unread h2 { font-weight: 850; }
+.notification-detail { display: grid; gap: 18px; max-width: 760px; }
 .stat-card span, .stat-card small { display: block; color: var(--muted); font-size: 12px; }
 .stat-card strong { display: block; margin: 14px 0 4px; font-size: 34px; letter-spacing: -.04em; }
 .notice-banner { margin: 18px 0; display: flex; align-items: center; gap: 14px; padding: 16px 18px; border: 1px solid #ffd6db; background: #fff6f7; border-radius: 16px; }

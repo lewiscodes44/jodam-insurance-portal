@@ -38,4 +38,6 @@ public class NotificationController {
     }
     @PostMapping("/read-all")
     public ResponseEntity<Void> markRead(Authentication authentication) { notificationService.markMyNotificationsRead(authentication.getName()); return ResponseEntity.noContent().build(); }
+    @PostMapping("/{notificationId}/read")
+    public ResponseEntity<Void> markOneRead(@org.springframework.web.bind.annotation.PathVariable Long notificationId, Authentication authentication) { notificationService.markNotificationRead(notificationId, authentication.getName()); return ResponseEntity.noContent().build(); }
 }
