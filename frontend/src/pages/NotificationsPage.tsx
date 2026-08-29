@@ -7,6 +7,7 @@ import {
   getMyPolicies,
   getMyQuotations,
   markNotificationRead,
+  markNotificationsRead,
   type Notification,
   type Policy,
   type Quotation,
@@ -32,7 +33,7 @@ function useUpdates() {
       )
       .finally(() => setLoading(false));
   }, []);
-  return { items, quotes, policies, loading, error, setItems };
+  return { items, quotes, policies, loading, error, setItems, setError };
 }
 function destination(n: Notification, quotes: Quotation[], policies: Policy[]) {
   const quote = quotes.find((q) => n.message.includes(q.quoteReference));
@@ -58,7 +59,9 @@ function liveMessage(n: Notification, quotes: Quotation[], policies: Policy[]) {
 }
 
 export function NotificationsPage() {
-  const { items, quotes, policies, loading, error, setItems } = useUpdates();
+  const { items, quotes, policies, loading, error, setItems, setError } =
+    useUpdates();
+  const [markingAll, setMarkingAll] = useState(false);
   const unread = items.filter((n) => !n.readAt);
   const read = items.filter((n) => n.readAt);
   async function open(n: Notification) {
@@ -73,6 +76,22 @@ export function NotificationsPage() {
       );
     }
   }
+  async function markAllRead() {
+    setMarkingAll(true);
+    try {
+      await markNotificationsRead();
+      const readAt = new Date().toISOString();
+      setItems((current) =>
+        current.map((item) => ({ ...item, readAt: item.readAt ?? readAt })),
+      );
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Unable to mark notifications as read",
+      );
+    } finally {
+      setMarkingAll(false);
+    }
+  }
   const section = (title: string, records: Notification[]) => (
     <section className="notification-section">
       <div className="panel__header">
@@ -82,7 +101,20 @@ export function NotificationsPage() {
             {title === "Unread" ? "Needs your attention" : "Previously viewed"}
           </h2>
         </div>
-        <span>{records.length}</span>
+        {title === "Unread" ? (
+          <div className="notification-section__actions">
+            <span>{records.length}</span>
+            <button
+              className="button button--secondary button--compact"
+              onClick={markAllRead}
+              disabled={markingAll}
+            >
+              {markingAll ? "Marking…" : "Mark all as read"}
+            </button>
+          </div>
+        ) : (
+          <span>{records.length}</span>
+        )}
       </div>
       <div className="stack-list">
         {records.map((n) => (

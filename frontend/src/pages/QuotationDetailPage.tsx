@@ -6,6 +6,7 @@ import { StatusPill } from "../components/StatusPill";
 import {
   acceptQuotation,
   getMyQuotations,
+  markNotificationsReadForReference,
   requestQuotationReview,
   type Quotation,
 } from "../lib/api";
@@ -22,6 +23,10 @@ export function QuotationDetailPage() {
       .then((items) => setQ(items.find((x) => x.id === Number(id)) ?? null))
       .catch((e) => setError(e.message));
   }, [id]);
+  useEffect(() => {
+    if (q?.quoteReference)
+      void markNotificationsReadForReference(q.quoteReference);
+  }, [q?.quoteReference]);
   async function accept() {
     if (!q) return;
     setBusy(true);

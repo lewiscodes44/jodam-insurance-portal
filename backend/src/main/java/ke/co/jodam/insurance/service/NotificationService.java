@@ -154,11 +154,26 @@ public class NotificationService {
         notificationRepository.saveAll(unread);
     }
     @Transactional
+    public void markNotificationsReadForReference(String username, String reference) {
+        if (reference == null || reference.isBlank()) return;
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+        List<Notification> matching = notificationRepository.findByUserAndReadAtIsNull(user).stream()
+                .filter(notification -> containsReference(notification.getSubject(), reference)
+                        || containsReference(notification.getMessage(), reference))
+                .toList();
+        matching.forEach(notification -> notification.setReadAt(java.time.LocalDateTime.now()));
+        notificationRepository.saveAll(matching);
+    }
+    @Transactional
     public void markNotificationRead(Long notificationId, String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
         Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new IllegalArgumentException("Notification not found"));
         if (!notification.getUser().getId().equals(user.getId())) throw new IllegalStateException("You are not authorized to read this notification");
         if (notification.getReadAt() == null) { notification.setReadAt(java.time.LocalDateTime.now()); notificationRepository.save(notification); }
+    }
+
+    private boolean containsReference(String value, String reference) {
+        return value != null && value.contains(reference);
     }
 
     private void createNotification(

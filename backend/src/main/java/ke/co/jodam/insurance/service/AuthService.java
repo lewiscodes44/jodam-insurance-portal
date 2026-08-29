@@ -122,7 +122,7 @@ public class AuthService {
                 .map(Role::getName)
                 .filter(name -> name.equals("ADMIN") || name.equals("AGENT") || name.equals("CUSTOMER"))
                 .findFirst()
-                .orElse("CUSTOMER");
+                .orElseThrow(() -> new IllegalStateException("This account does not have an assigned portal role"));
 
         return new AuthResponse(
                 "Login successful",
