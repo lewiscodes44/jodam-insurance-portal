@@ -75,6 +75,12 @@ public class Quotation {
     @Column(name = "agent_notes", length = 5000)
     private String agentNotes;
 
+    @Column(name = "customer_review_message", length = 3000)
+    private String customerReviewMessage;
+
+    @Column(name = "review_requested_at")
+    private LocalDateTime reviewRequestedAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private QuotationStatus status = QuotationStatus.DRAFT;
@@ -185,6 +191,10 @@ public class Quotation {
     public void setSpecialTerms(String specialTerms) { this.specialTerms = specialTerms; }
     public String getAgentNotes() { return agentNotes; }
     public void setAgentNotes(String agentNotes) { this.agentNotes = agentNotes; }
+    public String getCustomerReviewMessage() { return customerReviewMessage; }
+    public void setCustomerReviewMessage(String value) { customerReviewMessage = value; }
+    public LocalDateTime getReviewRequestedAt() { return reviewRequestedAt; }
+    public void setReviewRequestedAt(LocalDateTime value) { reviewRequestedAt = value; }
     public QuotationStatus getStatus() { return status; }
     public void setStatus(QuotationStatus status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }

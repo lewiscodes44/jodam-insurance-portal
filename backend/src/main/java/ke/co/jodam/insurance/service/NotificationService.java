@@ -97,6 +97,11 @@ public class NotificationService {
                 "Your Jodam quotation is ready", message);
     }
     @Transactional
+    public void createQuotationReviewRequestNotification(Quotation quotation) {
+        if (quotation == null || quotation.getAgent() == null || quotation.getAgent().getEmail() == null || quotation.getAgent().getEmail().isBlank()) return;
+        createNotification(quotation.getAgent(), NotificationChannel.EMAIL, quotation.getAgent().getEmail(), "Customer requested quotation review", "The customer requested a review of quotation " + quotation.getQuoteReference() + ": " + quotation.getCustomerReviewMessage());
+    }
+    @Transactional
     public void createPolicyIssuedNotification(Policy policy) {
         if (policy == null || policy.getCustomer() == null) {
             return;

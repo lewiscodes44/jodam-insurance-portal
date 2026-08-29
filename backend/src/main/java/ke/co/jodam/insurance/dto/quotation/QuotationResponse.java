@@ -35,6 +35,8 @@ public class QuotationResponse {
     private String excess;
     private String specialTerms;
     private String agentNotes;
+    private String customerReviewMessage;
+    private LocalDateTime reviewRequestedAt;
 
     private QuotationStatus status;
 
@@ -212,6 +214,10 @@ public class QuotationResponse {
     public void setAgentNotes(String agentNotes) {
         this.agentNotes = agentNotes;
     }
+    public String getCustomerReviewMessage() { return customerReviewMessage; }
+    public void setCustomerReviewMessage(String value) { customerReviewMessage = value; }
+    public LocalDateTime getReviewRequestedAt() { return reviewRequestedAt; }
+    public void setReviewRequestedAt(LocalDateTime value) { reviewRequestedAt = value; }
 
     public QuotationStatus getStatus() {
         return status;

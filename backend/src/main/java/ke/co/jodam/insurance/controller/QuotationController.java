@@ -3,6 +3,7 @@ package ke.co.jodam.insurance.controller;
 import jakarta.validation.Valid;
 import ke.co.jodam.insurance.dto.quotation.QuotationRequest;
 import ke.co.jodam.insurance.dto.quotation.QuotationResponse;
+import ke.co.jodam.insurance.dto.quotation.ReviewQuotationRequest;
 import ke.co.jodam.insurance.service.QuotationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -110,5 +111,10 @@ public class QuotationController {
                         authentication.getName()
                 )
         );
+    }
+
+    @PostMapping("/{quotationId}/request-review")
+    public ResponseEntity<QuotationResponse> requestReview(@PathVariable Long quotationId, @Valid @RequestBody ReviewQuotationRequest request, Authentication authentication) {
+        return ResponseEntity.ok(quotationService.requestReview(quotationId, request.getMessage(), authentication.getName()));
     }
 }

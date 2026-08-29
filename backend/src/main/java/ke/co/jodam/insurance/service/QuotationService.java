@@ -64,19 +64,18 @@ public class QuotationService {
 
         inquiry.setStatus(InquiryStatus.UNDER_REVIEW);
 
-        if (quotationRepository.findByInquiry(inquiry).isPresent()) {
-            throw new IllegalStateException(
-                    "A quotation already exists for this inquiry"
-            );
+        Quotation existingQuotation = quotationRepository.findByInquiry(inquiry).orElse(null);
+        if (existingQuotation != null && existingQuotation.getStatus() != QuotationStatus.REVIEW_REQUESTED) {
+            throw new IllegalStateException("A quotation already exists for this inquiry");
         }
 
         validateDatesAndAmounts(request);
 
-        Quotation quotation = new Quotation();
+        Quotation quotation = existingQuotation == null ? new Quotation() : existingQuotation;
         quotation.setInquiry(inquiry);
         quotation.setAgent(staff);
         applyRequest(quotation, request);
-        quotation.setQuoteReference(generateQuoteReference(inquiryId));
+        if (quotation.getQuoteReference() == null) quotation.setQuoteReference(generateQuoteReference(inquiryId));
         quotation.setStatus(QuotationStatus.DRAFT);
         quotation.calculateTotalPayable();
 
@@ -100,8 +99,8 @@ public class QuotationService {
         Quotation quotation = getQuotation(quotationId);
         ensureAssignedToCurrentStaff(quotation.getInquiry(), staff);
 
-        if (quotation.getStatus() != QuotationStatus.DRAFT) {
-            throw new IllegalStateException("Only draft quotations can be edited");
+        if (quotation.getStatus() != QuotationStatus.DRAFT && quotation.getStatus() != QuotationStatus.REVIEW_REQUESTED) {
+            throw new IllegalStateException("Only draft or review-requested quotations can be edited");
         }
 
         validateDatesAndAmounts(request);
@@ -120,8 +119,8 @@ public class QuotationService {
         Quotation quotation = getQuotation(quotationId);
         ensureAssignedToCurrentStaff(quotation.getInquiry(), staff);
 
-        if (quotation.getStatus() != QuotationStatus.DRAFT) {
-            throw new IllegalStateException("Only draft quotations can be sent");
+        if (quotation.getStatus() != QuotationStatus.DRAFT && quotation.getStatus() != QuotationStatus.REVIEW_REQUESTED) {
+            throw new IllegalStateException("Only draft or reviewed quotations can be sent");
         }
 
         if (quotation.getValidUntil().isBefore(LocalDate.now())) {
@@ -136,6 +135,8 @@ public class QuotationService {
 
         quotation.setStatus(QuotationStatus.SENT);
         quotation.setSentAt(LocalDateTime.now());
+        quotation.setCustomerReviewMessage(null);
+        quotation.setReviewRequestedAt(null);
 
         InsuranceInquiry inquiry = quotation.getInquiry();
         inquiry.setStatus(InquiryStatus.QUOTATION_SENT);
@@ -243,6 +244,23 @@ public class QuotationService {
         inquiryRepository.save(inquiry);
 
         return toResponse(quotationRepository.save(quotation));
+    }
+
+    @Transactional
+    public QuotationResponse requestReview(Long quotationId, String message, String customerUsername) {
+        Quotation quotation = getQuotation(quotationId);
+        InsuranceInquiry inquiry = quotation.getInquiry();
+        User customer = getUser(customerUsername);
+        if (!hasRole(customer, "CUSTOMER") || !inquiry.getCustomer().getId().equals(customer.getId())) throw new IllegalStateException("You are not authorized to request a review for this quotation");
+        if (quotation.getStatus() != QuotationStatus.SENT) throw new IllegalStateException("Only a sent quotation can be reviewed");
+        quotation.setCustomerReviewMessage(message.trim());
+        quotation.setReviewRequestedAt(LocalDateTime.now());
+        quotation.setStatus(QuotationStatus.REVIEW_REQUESTED);
+        inquiry.setStatus(InquiryStatus.UNDER_REVIEW);
+        inquiryRepository.save(inquiry);
+        Quotation saved = quotationRepository.save(quotation);
+        notificationService.createQuotationReviewRequestNotification(saved);
+        return toResponse(saved);
     }
 
     private void applyRequest(Quotation quotation, QuotationRequest request) {
@@ -376,6 +394,8 @@ public class QuotationService {
         response.setExcess(quotation.getExcess());
         response.setSpecialTerms(quotation.getSpecialTerms());
         response.setAgentNotes(quotation.getAgentNotes());
+        response.setCustomerReviewMessage(quotation.getCustomerReviewMessage());
+        response.setReviewRequestedAt(quotation.getReviewRequestedAt());
         response.setStatus(quotation.getStatus());
         response.setCreatedAt(quotation.getCreatedAt());
         response.setUpdatedAt(quotation.getUpdatedAt());
