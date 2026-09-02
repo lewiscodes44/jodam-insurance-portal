@@ -14,6 +14,15 @@ export async function apiRequest<T>(
     headers.set("Content-Type", "application/json");
   if (token) headers.set("Authorization", `Bearer ${token}`);
   const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  if (response.status === 401 && token && !path.startsWith("/api/auth/")) {
+    localStorage.removeItem("jodam.token");
+    localStorage.removeItem("jodam.username");
+    localStorage.removeItem("jodam.role");
+    const returnTo = sessionStorage.getItem("jodam.authReturnTo") ?? `${window.location.pathname}${window.location.search}`;
+    sessionStorage.removeItem("jodam.authReturnTo");
+    window.location.replace(`/login?sessionExpired=1&returnTo=${encodeURIComponent(returnTo)}`);
+    throw new Error("Your session has expired. Please sign in again.");
+  }
   if (!response.ok) {
     let message = `Request failed (${response.status})`;
     try {
