@@ -421,6 +421,31 @@ export const getCustomerProfileDocuments = (username: string) =>
   apiRequest<CustomerDocument[]>(`/api/documents/customers/${username}`);
 export const getInquiryDocuments = (inquiryId: number) =>
   apiRequest<CustomerDocument[]>(`/api/documents/inquiries/${inquiryId}`);
+export async function downloadDocument(documentId: number) {
+  const token = localStorage.getItem("jodam.token");
+  const headers = new Headers();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const response = await fetch(`${API_BASE}/api/documents/${documentId}/download`, { headers });
+  if (response.status === 401 && token) {
+    localStorage.removeItem("jodam.token");
+    localStorage.removeItem("jodam.username");
+    localStorage.removeItem("jodam.role");
+    const returnTo = `${window.location.pathname}${window.location.search}`;
+    window.location.replace(`/login?sessionExpired=1&returnTo=${encodeURIComponent(returnTo)}`);
+    throw new Error("Your session has expired. Please sign in again.");
+  }
+  if (!response.ok) {
+    let message = `Unable to open document (${response.status})`;
+    try {
+      const body = await response.json();
+      message = body.message ?? body.error ?? message;
+    } catch {
+      /* noop */
+    }
+    throw new Error(message);
+  }
+  return response.blob();
+}
 export const uploadProfileDocument = (type: string, file: File) => {
   const body = new FormData();
   body.append("file", file);

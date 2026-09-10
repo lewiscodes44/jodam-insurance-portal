@@ -4,21 +4,25 @@ import { StaffShell } from "../components/StaffShell";
 import { StatusPill } from "../components/StatusPill";
 import {
   createQuotation,
+  downloadDocument,
+  getCustomerProfileDocuments,
+  getInquiryDocuments,
   getMyInquiry,
   getQuotationForInquiry,
   issuePolicy,
   sendQuotation,
   type Inquiry,
+  type CustomerDocument,
   type Quotation,
 } from "../lib/api";
 
 const today = () => new Date().toISOString().slice(0, 10);
-const documents = [
-  "Logbook / import documents",
-  "National ID",
-  "KRA PIN",
-  "Driving licence",
-  "Current valuation report",
+const documentChecks = [
+  { label: "Logbook / import documents", type: "LOGBOOK" },
+  { label: "National ID", type: "NATIONAL_ID" },
+  { label: "KRA PIN", type: "KRA_PIN" },
+  { label: "Driving licence", type: "DRIVING_LICENCE" },
+  { label: "Current valuation report", type: "VALUATION_REPORT" },
 ];
 const benefits = [
   "Windscreen and window glass",
@@ -41,6 +45,7 @@ export function StaffInquiryDetailPage() {
   const navigate = useNavigate();
   const [item, setItem] = useState<Inquiry | null>(null);
   const [quote, setQuote] = useState<Quotation | null>(null);
+  const [submittedDocuments, setSubmittedDocuments] = useState<CustomerDocument[]>([]);
   const [q, setQ] = useState({
     insurer: "Jodam Insurance",
     product: "Comprehensive Motor",
@@ -76,7 +81,16 @@ export function StaffInquiryDetailPage() {
   useEffect(() => {
     if (!id) return;
     getMyInquiry(Number(id))
-      .then(setItem)
+      .then((inquiry) => {
+        setItem(inquiry);
+        return Promise.all([
+          getCustomerProfileDocuments(inquiry.customerUsername),
+          getInquiryDocuments(inquiry.id),
+        ]);
+      })
+      .then(([profileDocuments, inquiryDocuments]) =>
+        setSubmittedDocuments([...profileDocuments, ...inquiryDocuments]),
+      )
       .catch((e) => setError(e.message));
     getQuotationForInquiry(Number(id))
       .then(setQuote)
@@ -123,6 +137,20 @@ export function StaffInquiryDetailPage() {
         ? current[field].filter((x) => x !== label)
         : [...current[field], label],
     }));
+  async function viewDocument(document: CustomerDocument) {
+    try {
+      const blob = await downloadDocument(document.id);
+      const url = URL.createObjectURL(blob);
+      const link = window.document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unable to open document");
+    }
+  }
   async function sendQuote() {
     if (!id || !q.basicPremium || !q.validUntil) return;
     setBusy(true);
@@ -328,7 +356,7 @@ export function StaffInquiryDetailPage() {
                   </label>
                 </div>
                 <label>
-                  Valid until
+                  Quotation Valid Until
                   <input
                     type="date"
                     min={today()}
@@ -392,16 +420,36 @@ export function StaffInquiryDetailPage() {
                 </fieldset>
                 <fieldset>
                   <legend>Documents verified by staff</legend>
-                  {documents.map((label) => (
-                    <label key={label}>
-                      <input
-                        type="checkbox"
-                        checked={q.docs.includes(label)}
-                        onChange={() => toggle("docs", label)}
-                      />{" "}
-                      {label}
-                    </label>
-                  ))}
+                  {documentChecks.map(({ label, type }) => {
+                    const submitted = submittedDocuments.find(
+                      (document) => document.documentType === type,
+                    );
+                    return (
+                      <div className="document-verification-row" key={type}>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={q.docs.includes(label)}
+                            disabled={!submitted}
+                            onChange={() => toggle("docs", label)}
+                          />{" "}
+                          {label}
+                        </label>
+                        {submitted ? (
+                          <button
+                            type="button"
+                            className="text-button"
+                            onClick={() => viewDocument(submitted)}
+                            title={submitted.filename}
+                          >
+                            View
+                          </button>
+                        ) : (
+                          <span className="document-missing">Not submitted</span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </fieldset>
                 <label>
                   Valuation reference

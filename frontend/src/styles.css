@@ -522,6 +522,20 @@ button {
   accent-color: var(--red);
   flex: 0 0 auto;
 }
+.document-verification-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.document-verification-row label {
+  min-width: 0;
+}
+.document-missing {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
 .form-stack > label:has(> input[type="checkbox"]) {
   display: flex;
   flex-direction: row-reverse;
